@@ -1,7 +1,7 @@
-﻿using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate;
+﻿using System;
 using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Enums;
 
-namespace Microsoft.eShopWeb.Web.ViewModels;
+namespace BlazorAdmin.ViewModels;
 
 public class OrderViewModel
 {
@@ -10,5 +10,4 @@ public class OrderViewModel
     public decimal Total { get; set; }
     public OrderStatus Status { get; set; }
     public string Buyer { get; set; }
-    public Address? ShippingAddress { get; set; }
 }

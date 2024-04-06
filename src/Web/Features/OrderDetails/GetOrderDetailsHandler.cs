@@ -1,7 +1,9 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Microsoft.eShopWeb.ApplicationCore.Specifications;
+using Microsoft.eShopWeb.Infrastructure.Identity;
 using Microsoft.eShopWeb.Web.ViewModels;
 
 namespace Microsoft.eShopWeb.Web.Features.OrderDetails;
@@ -9,10 +11,11 @@ namespace Microsoft.eShopWeb.Web.Features.OrderDetails;
 public class GetOrderDetailsHandler : IRequestHandler<GetOrderDetails, OrderDetailViewModel?>
 {
     private readonly IReadRepository<Order> _orderRepository;
-
-    public GetOrderDetailsHandler(IReadRepository<Order> orderRepository)
+    private readonly UserManager<ApplicationUser> _userManager;
+    public GetOrderDetailsHandler(IReadRepository<Order> orderRepository, UserManager<ApplicationUser> userManager)
     {
         _orderRepository = orderRepository;
+        _userManager = userManager;
     }
 
     public async Task<OrderDetailViewModel?> Handle(GetOrderDetails request,
@@ -25,7 +28,7 @@ public class GetOrderDetailsHandler : IRequestHandler<GetOrderDetails, OrderDeta
         {
             return null;
         }
-
+        var buyer = await _userManager.FindByEmailAsync(order.BuyerId);
         return new OrderDetailViewModel
         {
             OrderDate = order.OrderDate,
@@ -39,6 +42,8 @@ public class GetOrderDetailsHandler : IRequestHandler<GetOrderDetails, OrderDeta
             }).ToList(),
             OrderNumber = order.Id,
             ShippingAddress = order.ShipToAddress,
+            Status = order.OrderStatus,
+            Buyer = buyer.UserName,
             Total = order.Total()
         };
     }

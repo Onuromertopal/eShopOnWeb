@@ -1,0 +1,111 @@
+﻿@using BlazorAdmin.Interfaces
+@using BlazorAdmin.ViewModels
+@using Microsoft.eShopWeb.ApplicationCore.Interfaces
+
+@inject IJSRuntime JSRuntime
+@inject ToastService ToastService   
+@inject IOrderViewModelService OrderViewModelService
+@inherits BlazorAdmin.Helpers.BlazorComponent
+
+@namespace BlazorAdmin.Pages.OrderPage
+
+<div class="modal @_modalClass" tabindex="-1" role="dialog" style="display:@_modalDisplay">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Details @_item.OrderNumber</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                @if (_item == null)
+                {
+                    <Spinner></Spinner>
+                }
+                else
+                {
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Units</th>
+                            </tr>
+                        </thead>
+                        <tbody class="cursor-pointer">
+                            @foreach (var item in _item.OrderItems)
+                            {
+                                <tr>
+                                    <td>@item.ProductName</td>
+                                    <td>@item.UnitPrice</td>
+                                    <td>@item.Units</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close">Close</button>
+                <button class="btn btn-primary" @onclick="ApproveClick">
+                    Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (_showDetailsModal)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnApproveClick { get; set; }
+
+    private string _modalDisplay = "none;";
+    private string _modalClass = "";
+    private bool _showDetailsModal = false;
+    private OrderDetailViewModel _item = new OrderDetailViewModel();
+
+    public async Task ApproveClick()
+    {
+        var result = await OrderViewModelService.ApproveOrderAsync(_item.OrderNumber);
+        if (result)
+        {
+            ToastService.ShowToast("Order Approved", ToastLevel.Success);
+            await OnApproveClick.InvokeAsync(null);
+            await Close();
+        }
+        else
+        {
+            ToastService.ShowToast("Order not approved", ToastLevel.Error);
+        }
+    }
+
+    public async Task Open(int id)
+    {
+        await new Css(JSRuntime).HideBodyOverflow();
+
+        _item = await OrderViewModelService.GetDetails(id);
+
+        _modalDisplay = "block;";
+        _modalClass = "Show";
+        _showDetailsModal = true;
+
+        StateHasChanged();
+    }
+
+    public async Task Close()
+    {
+        await new Css(JSRuntime).ShowBodyOverflow();
+
+        _modalDisplay = "none";
+        _modalClass = "";
+        _showDetailsModal = false;
+    }
+}

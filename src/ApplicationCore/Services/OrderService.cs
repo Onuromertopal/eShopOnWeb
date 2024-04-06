@@ -4,6 +4,7 @@ using Ardalis.GuardClauses;
 using Microsoft.eShopWeb.ApplicationCore.Entities;
 using Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate;
 using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate;
+using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Enums;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Microsoft.eShopWeb.ApplicationCore.Specifications;
 
@@ -25,6 +26,15 @@ public class OrderService : IOrderService
         _uriComposer = uriComposer;
         _basketRepository = basketRepository;
         _itemRepository = itemRepository;
+    }
+
+    public async Task<bool> ApproveOrderAsync(int orderId)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        Guard.Against.Null(order, nameof(order));
+        order.Approve();
+        await _orderRepository.UpdateAsync(order);
+        return true;
     }
 
     public async Task CreateOrderAsync(int basketId, Address shippingAddress)
